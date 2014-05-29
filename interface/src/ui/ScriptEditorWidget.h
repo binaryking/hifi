@@ -35,7 +35,7 @@ public:
     bool save();
     bool saveAs();
     bool questionSave();
-    const QString getScriptName() const { return _currentScript; };
+    const QString getScriptName() const { return _currentScript; }
 
 signals:
     void runningStateChanged();
@@ -45,7 +45,6 @@ signals:
 private slots:
     void onScriptError(const QString& message);
     void onScriptPrint(const QString& message);
-    void onScriptModified();
     void onScriptEnding();
 
 private:

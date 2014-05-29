@@ -34,8 +34,6 @@ ScriptEditorWidget::ScriptEditorWidget() :
 
     connect(_scriptEditorWidgetUI->scriptEdit->document(), &QTextDocument::modificationChanged, this,
             &ScriptEditorWidget::scriptModified);
-    connect(_scriptEditorWidgetUI->scriptEdit->document(), &QTextDocument::contentsChanged, this,
-            &ScriptEditorWidget::onScriptModified);
 
     // remove the title bar (see the Qt docs on setTitleBarWidget)
     setTitleBarWidget(new QWidget());
@@ -48,13 +46,6 @@ ScriptEditorWidget::ScriptEditorWidget() :
 
 ScriptEditorWidget::~ScriptEditorWidget() {
     delete _scriptEditorWidgetUI;
-}
-
-void ScriptEditorWidget::onScriptModified() {
-    if(_scriptEditorWidgetUI->onTheFlyCheckBox->isChecked() && isRunning()) {
-        setRunning(false);
-        setRunning(true);
-    }
 }
 
 void ScriptEditorWidget::onScriptEnding() {
@@ -75,22 +66,8 @@ bool ScriptEditorWidget::setRunning(bool run) {
         return false;
     }
 
-    // Clean-up old connections.
-    if (_scriptEngine != NULL) {
-        disconnect(_scriptEngine, &ScriptEngine::runningStateChanged, this, &ScriptEditorWidget::runningStateChanged);
-        disconnect(_scriptEngine, &ScriptEngine::errorMessage, this, &ScriptEditorWidget::onScriptError);
-        disconnect(_scriptEngine, &ScriptEngine::printedMessage, this, &ScriptEditorWidget::onScriptPrint);
-        disconnect(_scriptEngine, &ScriptEngine::scriptEnding, this, &ScriptEditorWidget::onScriptEnding);
-    }
-
     if (run) {
         _scriptEngine = Application::getInstance()->loadScript(_currentScript, true);
-        connect(_scriptEngine, &ScriptEngine::runningStateChanged, this, &ScriptEditorWidget::runningStateChanged);
-
-        // Make new connections.
-        connect(_scriptEngine, &ScriptEngine::errorMessage, this, &ScriptEditorWidget::onScriptError);
-        connect(_scriptEngine, &ScriptEngine::printedMessage, this, &ScriptEditorWidget::onScriptPrint);
-        connect(_scriptEngine, &ScriptEngine::scriptEnding, this, &ScriptEditorWidget::onScriptEnding);
     } else {
         Application::getInstance()->stopScript(_currentScript);
         _scriptEngine = NULL;
@@ -128,13 +105,6 @@ void ScriptEditorWidget::loadFile(const QString& scriptPath) {
         QTextStream in(&file);
         _scriptEditorWidgetUI->scriptEdit->setPlainText(in.readAll());
         setScriptFile(scriptPath);
-
-        if (_scriptEngine != NULL) {
-            disconnect(_scriptEngine, &ScriptEngine::runningStateChanged, this, &ScriptEditorWidget::runningStateChanged);
-            disconnect(_scriptEngine, &ScriptEngine::errorMessage, this, &ScriptEditorWidget::onScriptError);
-            disconnect(_scriptEngine, &ScriptEngine::printedMessage, this, &ScriptEditorWidget::onScriptPrint);
-            disconnect(_scriptEngine, &ScriptEngine::scriptEnding, this, &ScriptEditorWidget::onScriptEnding);
-        }
     } else {
         QNetworkAccessManager* networkManager = new QNetworkAccessManager(this);
         QNetworkReply* reply = networkManager->get(QNetworkRequest(url));
@@ -150,10 +120,14 @@ void ScriptEditorWidget::loadFile(const QString& scriptPath) {
 
     _scriptEngine = Application::getInstance()->getScriptEngine(_currentScript);
     if (_scriptEngine != NULL) {
-        connect(_scriptEngine, &ScriptEngine::runningStateChanged, this, &ScriptEditorWidget::runningStateChanged);
-        connect(_scriptEngine, &ScriptEngine::errorMessage, this, &ScriptEditorWidget::onScriptError);
-        connect(_scriptEngine, &ScriptEngine::printedMessage, this, &ScriptEditorWidget::onScriptPrint);
-        connect(_scriptEngine, &ScriptEngine::scriptEnding, this, &ScriptEditorWidget::onScriptEnding);
+        connect(_scriptEngine, &ScriptEngine::runningStateChanged,
+                this, &ScriptEditorWidget::runningStateChanged, Qt::UniqueConnection);
+        connect(_scriptEngine, &ScriptEngine::errorMessage,
+                this, &ScriptEditorWidget::onScriptError, Qt::UniqueConnection);
+        connect(_scriptEngine, &ScriptEngine::printedMessage,
+                this, &ScriptEditorWidget::onScriptPrint, Qt::UniqueConnection);
+        connect(_scriptEngine, &ScriptEngine::scriptEnding,
+                this, &ScriptEditorWidget::onScriptEnding, Qt::UniqueConnection);
     }
 }
 

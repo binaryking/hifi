@@ -3271,6 +3271,7 @@ ScriptEngine* Application::loadScript(const QString& scriptName, bool loadScript
             return NULL;
         }
         _runningScriptsWidget->setRunningScripts(getRunningScripts());
+        RunningScriptsWatcher::getInstance()->addFile(scriptName);
     }
 
     // setup the packet senders and jurisdiction listeners of the script engine's scripting interfaces so

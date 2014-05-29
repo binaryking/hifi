@@ -103,6 +103,7 @@ void RunningScriptsWatcher::removeFiles(const QStringList &files) {
             continue;
         }
         _files.erase(it);
+        _watcher->removePath(QFileInfo(file).absoluteDir().path());
         _watcher->removePath(file);
     }
 }
