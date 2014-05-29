@@ -99,6 +99,9 @@ public slots:
     void include(const QString& includeFile);
     void print(const QString& message);
 
+private slots:
+    void scriptContentsChanged(const QString& path);
+
 signals:
     void update(float deltaTime);
     void scriptEnding();

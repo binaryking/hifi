@@ -69,6 +69,7 @@
 #include "Menu.h"
 #include "ModelUploader.h"
 #include "Util.h"
+#include "RunningScriptsWatcher.h"
 #include "devices/OculusManager.h"
 #include "devices/TV3DManager.h"
 #include "renderer/ProgramObject.h"
@@ -2285,12 +2286,12 @@ void Application::updateShadowMap() {
         radius = qMax(radius, glm::distance(points[i], center));
     }
     center = inverseRotation * center;
-    
+
     // to reduce texture "shimmer," move in texel increments
     float texelSize = (2.0f * radius) / fbo->width();
     center = glm::vec3(roundf(center.x / texelSize) * texelSize, roundf(center.y / texelSize) * texelSize,
         roundf(center.z / texelSize) * texelSize);
-    
+
     glm::vec3 minima(center.x - radius, center.y - radius, center.z - radius);
     glm::vec3 maxima(center.x + radius, center.y + radius, center.z + radius);
 
@@ -3259,6 +3260,8 @@ ScriptEngine* Application::loadScript(const QString& scriptName, bool loadScript
     ScriptEngine* scriptEngine = new ScriptEngine(scriptUrl, &_controllerScriptingInterface);
     _scriptEnginesHash.insert(scriptUrl.toString(), scriptEngine);
 
+    RunningScriptsWatcher::getInstance()->addFile(scriptName);
+
     if (!scriptEngine->hasScript()) {
         qDebug() << "Application::loadScript(), script failed to load...";
         return NULL;
@@ -3333,6 +3336,7 @@ ScriptEngine* Application::loadScript(const QString& scriptName, bool loadScript
 
 void Application::scriptFinished(const QString& scriptName) {
     if (_scriptEnginesHash.remove(scriptName)) {
+        RunningScriptsWatcher::getInstance()->removeFile(scriptName);
         _runningScriptsWidget->scriptStopped(scriptName);
         _runningScriptsWidget->setRunningScripts(getRunningScripts());
         bumpSettings();

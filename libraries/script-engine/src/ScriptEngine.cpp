@@ -35,6 +35,7 @@
 #include "MenuItemProperties.h"
 #include "LocalVoxels.h"
 #include "ScriptEngine.h"
+#include "RunningScriptsWatcher.h"
 #include "XMLHttpRequestClass.h"
 
 VoxelsScriptingInterface ScriptEngine::_voxelsScriptingInterface;
@@ -205,6 +206,9 @@ void ScriptEngine::init() {
         return; // only initialize once
     }
 
+    connect(RunningScriptsWatcher::getInstance(), &RunningScriptsWatcher::fileChanged,
+            this, &ScriptEngine::scriptContentsChanged, Qt::UniqueConnection);
+
     _isInitialized = true;
 
     _voxelsScriptingInterface.init();
@@ -246,7 +250,7 @@ void ScriptEngine::init() {
 
     QScriptValue localVoxelsValue = _engine.scriptValueFromQMetaObject<LocalVoxels>();
     _engine.globalObject().setProperty("LocalVoxels", localVoxelsValue);
-    
+
     qScriptRegisterMetaType(&_engine, injectorToScriptValue, injectorFromScriptValue);
 
     registerGlobalObject("Script", this);
@@ -603,6 +607,28 @@ QUrl ScriptEngine::resolveInclude(const QString& include) const {
 
 void ScriptEngine::print(const QString& message) {
     emit printedMessage(message);
+}
+
+void ScriptEngine::scriptContentsChanged(const QString &path) {
+    if (path == _fileNameString && _isRunning) {
+        QFile scriptFile(_fileNameString);
+        if (scriptFile.open(QFile::ReadOnly | QFile::Text)) {
+            QTextStream in(&scriptFile);
+            _scriptContents = in.readAll();
+        } else {
+            qDebug() << "ERROR Loading file:" << _fileNameString;
+            emit errorMessage("ERROR Loading file:" + _fileNameString);
+        }
+
+        _engine.abortEvaluation();
+        QScriptValue result = _engine.evaluate(_scriptContents);
+        if (_engine.hasUncaughtException()) {
+            int line = _engine.uncaughtExceptionLineNumber();
+
+            qDebug() << "Uncaught exception at line" << line << ":" << result.toString();
+            emit errorMessage("Uncaught exception at line" + QString::number(line) + ":" + result.toString());
+        }
+    }
 }
 
 void ScriptEngine::include(const QString& includeFile) {
