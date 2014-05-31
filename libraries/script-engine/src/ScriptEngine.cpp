@@ -632,6 +632,7 @@ void ScriptEngine::scriptContentsChanged(const QString &path) {
             emit errorMessage("ERROR Loading file:" + _fileNameString);
         }
 
+        emit scriptEnding();
         _engine.abortEvaluation();
         QScriptValue result = _engine.evaluate(_scriptContents);
         if (_engine.hasUncaughtException()) {
