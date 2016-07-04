@@ -93,9 +93,9 @@ class Application;
 #endif
 #define qApp (static_cast<Application*>(QCoreApplication::instance()))
 
-class Application : public QApplication, 
-                    public AbstractViewStateInterface, 
-                    public AbstractScriptingServicesInterface, 
+class Application : public QApplication,
+                    public AbstractViewStateInterface,
+                    public AbstractScriptingServicesInterface,
                     public AbstractUriHandler,
                     public PluginContainer {
     Q_OBJECT
@@ -285,6 +285,8 @@ public slots:
     QVector<EntityItemID> pasteEntities(float x, float y, float z);
     bool exportEntities(const QString& filename, const QVector<EntityItemID>& entityIDs, const glm::vec3* givenOffset = nullptr);
     bool exportEntities(const QString& filename, float x, float y, float z, float scale);
+    QString exportEntityJSON(const EntityItemID& entityID);
+    bool addEntityFromJSON(const QString& json);
     bool importEntities(const QString& url);
     void updateThreadPoolCount() const;
 

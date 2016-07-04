@@ -1,0 +1,216 @@
+<!--
+//  googleSheetsInventory.html
+//
+//  Created by Mohammed Nafees on 06/28/16
+//  Copyright 2016 High Fidelity, Inc.
+//
+//  Distributed under the Apache License, Version 2.0.
+//  See the accompanying file LICENSE or http://www.apache.org/licenses/LICENSE-2.0.html
+-->
+
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="edit-style.css">
+    <script src="list.min.js"></script>
+    <script type="text/javascript" src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script type="text/javascript" src="eventBridgeLoader.js"></script>
+    <script type="text/javascript" src="spinButtons.js"></script>
+    <script type="text/javascript" src="jquery-2.1.4.min.js"></script>
+
+    <script>
+        var currentSortColumn = "name";
+        var currentSortOrder = "des";
+        var entityList = null;
+        const MAX_ITEMS = Number.MAX_VALUE;
+        var loggedIn = false;
+        const ASCENDING_STRING = '&#x25BE;';
+        const DESCENDING_STRING = '&#x25B4;';
+
+        function loaded() {
+            openEventBridge(function() {
+                entityList = new List('entity-list', { valueNames: ['name', 'path', 'date', 'count'], page: MAX_ITEMS});
+                entityList.clear();
+                elLogin = document.getElementById("login");
+                elEntityTableScroll = document.getElementById("entity-table-scroll");
+                elEntityTableScroll.style.visibility = "hidden";
+                elStoreEntity = document.getElementById("store-entity");
+                elRezEntity = document.getElementById("rez-entity");             
+                elNoEntitiesMessage = document.getElementById("no-entities");
+
+                document.getElementById("entity-name").onclick = function() {
+                    setSortColumn('name');
+                };
+                document.getElementById("entity-path").onclick = function() {
+                    setSortColumn('path');
+                };
+                document.getElementById("entity-date").onclick = function() {
+                    setSortColumn('date');
+                };
+                document.getElementById("entity-count").onclick = function () {
+                    setSortColumn('count');
+                };
+
+                elLogin.onclick = function() {
+                    if (loggedIn) {
+                        deauth();
+                    } else {
+                        auth();
+                    }
+                    loggedIn = !loggedIn;
+                };
+
+                elStoreEntity.onclick = function() {
+                    EventBridge.emitWebEvent(JSON.stringify({ type: "storeentity" }));
+                };
+
+                elRezEntity.onclick = function() {
+                    EventBridge.emitWebEvent(JSON.stringify({ type: "rezentity" }));
+                };
+
+                function auth() {
+                    EventBridge.emitWebEvent(JSON.stringify({ type: "gauth" }));
+                }
+
+                function deauth() {
+                    EventBridge.emitWebEvent(JSON.stringify({ type: "gdeauth" }));
+                }
+
+                var elSortOrder = {
+                    name: document.querySelector('#entity-name .sort-order'),
+                    path: document.querySelector('#entity-path .sort-order'),
+                    date: document.querySelector('#entity-date .sort-order'),
+                    count: document.querySelector('#entity-count .sort-order'),
+                }
+                function setSortColumn(column) {
+                    if (currentSortColumn == column) {
+                        currentSortOrder = currentSortOrder == "asc" ? "desc" : "asc";
+                    } else {
+                        elSortOrder[currentSortColumn].innerHTML = "";
+                        currentSortColumn = column;
+                        currentSortOrder = "asc";
+                    }
+                    elSortOrder[column].innerHTML = currentSortOrder == "asc" ? ASCENDING_STRING : DESCENDING_STRING;
+                    entityList.sort(currentSortColumn, { order: currentSortOrder });
+                }
+                setSortColumn("name");
+
+                function addTableEntry(name, path, date, count) {
+                    entityList.add([{
+                        name: name,
+                        path: path,
+                        date: date,
+                        count: count
+                    }], function(items) {
+                        items[0].elm.onclick = function(clickEvent) {
+                            $(this).addClass("selected").siblings().removeClass("selected");
+                            var selectionIndex = $("tbody tr").index(this);
+                            EventBridge.emitWebEvent(JSON.stringify({ type: "entityselected", index: selectionIndex }));
+                        }
+                    });
+                }
+
+                function resize() {
+                    // Take up available window space
+                    elEntityTableScroll.style.height = window.innerHeight - 190;
+
+                    var tds = document.querySelectorAll("#entity-table-body tr:first-child td");
+                    var ths = document.querySelectorAll("#entity-table thead th");
+                    if (tds.length >= ths.length) {
+                        // Update the widths of the header cells to match the body
+                        for (var i = 0; i < ths.length; i++) {
+                            ths[i].width = tds[i].offsetWidth;
+                        }
+                    } else {
+                        // Reasonable widths if nothing is displayed
+                        var tableWidth = document.getElementById("entity-table").offsetWidth;
+                        ths[0].width = 0.34 * tableWidth;
+                        ths[1].width = 0.34 * tableWidth;
+                        ths[2].width = 0.24 * tableWidth;
+                        ths[3].width = 0.08 * tableWidth;
+                    }
+                };
+
+                if (window.EventBridge !== undefined) {
+                    EventBridge.scriptEventReceived.connect(function(data) {
+                        data = JSON.parse(data);
+              
+                        if (data.type == "authenticated") {
+                            elLogin.className = "red";
+                            elLogin.value = "Logout";
+                            elEntityTableScroll.style.visibility = "visible";
+                        } else if (data.type == "deauthenticated") {
+                            elLogin.className = "blue";
+                            elLogin.value = "Login to Google";
+                            elEntityTableScroll.style.visibility = "hidden";
+                            entityList.clear();
+                        } else if (data.type == "tableupdate") {
+                            entityList.clear();
+                            var entries = data.entries;
+                            if (entries.length == 0) {
+                                elNoEntitiesMessage.style.display = "block";
+                            } else {    
+                                elNoEntitiesMessage.style.display = "none";
+                                for (var i = 0; i < entries.length; ++i) {
+                                    addTableEntry(entries[i][0], entries[i][1], entries[i][2], entries[i][3]);
+                                }
+                                resize();
+                            }
+                        }
+                    });
+                }
+
+                window.onresize = resize;
+                resize();
+            });
+
+            augmentSpinButtons();
+
+            document.addEventListener("contextmenu", function (event) {
+                event.preventDefault();
+            }, false);
+        }
+    </script>
+<body onload="loaded();">
+    <div id="entity-list">
+        <div id="search-area">
+            <input type="button" class="blue" id="login" value="Login to Google"/>
+        </div>
+        <div id="entity-table-scroll">
+            <table id="entity-table">
+                <colgroup>
+                    <col span="1" id="col-name" />
+                    <col span="1" id="col-path" />
+                    <col span="1" id="col-date" />
+                    <col span="1" id="col-count" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th id="entity-name" data-sort="name">Name<span class="sort-order"></span></th>
+                        <th id="entity-path" data-sort="path">Path<span class="sort-order"></span></th>
+                        <th id="entity-date" data-sort="date">Date<span class="sort-order"></span></th>
+                        <th id="entity-count" data-sort="count">Count<span class="sort-order"></span></th>
+                    </tr>
+                </thead>
+                <tbody class="list" id="entity-table-body">
+                    <tr>
+                        <td class="name">Name</td>
+                        <td class="path">Path</td>
+                        <td class="date">Date</td>
+                        <td class="count">Count</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td id="footer-text" colspan="5"> </td>
+                    </tr>
+                </tfoot>
+            </table>
+            <div id="no-entities">
+                No entities stored in the inventory yet.
+            </div>
+            <input type="button" id="store-entity" value="Store Entity" style="position: fixed; bottom: 25px"/>
+            <input type="button" id="rez-entity" value="Rez Entity" style="position: fixed; bottom: 25px; left: 170px;"/>
+        </div>
+    </div>
+</body>
+</html>

@@ -1887,10 +1887,8 @@ bool Octree::writeToFile(const char* fileName, OctreeElementPointer element, QSt
     return success;
 }
 
-bool Octree::writeToJSONFile(const char* fileName, OctreeElementPointer element, bool doGzip) {
+QByteArray Octree::exportAsJSON(OctreeElementPointer element) {
     QVariantMap entityDescription;
-
-    qCDebug(octree, "Saving JSON SVO to file %s...", fileName);
 
     OctreeElementPointer top;
     if (element) {
@@ -1908,11 +1906,14 @@ bool Octree::writeToJSONFile(const char* fileName, OctreeElementPointer element,
     bool entityDescriptionSuccess = writeToMap(entityDescription, top, true, true);
     if (!entityDescriptionSuccess) {
         qCritical("Failed to convert Entities to QVariantMap while saving to json.");
-        return false;
+        return NULL;
     }
 
-    // convert the QVariantMap to JSON
-    QByteArray jsonData = QJsonDocument::fromVariant(entityDescription).toJson();
+    return QJsonDocument::fromVariant(entityDescription).toJson(QJsonDocument::Compact);
+}
+
+bool Octree::writeToJSONFile(const char* fileName, OctreeElementPointer element, bool doGzip) {
+    QByteArray jsonData = exportAsJSON(element);
     QByteArray jsonDataForFile;
 
     if (doGzip) {

@@ -43,6 +43,26 @@ bool ClipboardScriptingInterface::exportEntities(const QString& filename, float 
     return retVal;
 }
 
+bool ClipboardScriptingInterface::addEntityFromJSON(const QString& json) {
+    bool retVal;
+    QMetaObject::invokeMethod(qApp, "addEntityFromJSON", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(bool, retVal),
+                              Q_ARG(const QString&, json));
+    return retVal;
+}
+
+QString ClipboardScriptingInterface::exportEntityJSON(const EntityItemID& entityID) {
+    QString retVal;
+    QMetaObject::invokeMethod(qApp, "exportEntityJSON", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(QString, retVal),
+                              Q_ARG(const EntityItemID&, entityID));
+    return retVal;
+}
+
+QString ClipboardScriptingInterface::getEntityJSONHash(const QString& json) {
+    return QCryptographicHash::hash(json.toUtf8(), QCryptographicHash::Sha256).toHex();
+}
+
 bool ClipboardScriptingInterface::importEntities(const QString& filename) {
     bool retVal;
     QMetaObject::invokeMethod(qApp, "importEntities", Qt::BlockingQueuedConnection,

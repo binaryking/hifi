@@ -33,7 +33,10 @@ Script.include([
     "libraries/gridTool.js",
     "libraries/entityList.js",
     "particle_explorer/particleExplorerTool.js",
-    "libraries/lightOverlayManager.js"
+
+    "libraries/lightOverlayManager.js",
+
+    "libraries/inventoryWindow.js"
 ]);
 
 var selectionDisplay = SelectionDisplay;
@@ -55,6 +58,13 @@ selectionManager.addEventListener(function () {
     selectionDisplay.updateHandles();
     lightOverlayManager.updatePositions();
 });
+
+var inventoryWindow = InventoryWindow();
+
+var toolIconUrl = Script.resolvePath("assets/images/tools/");
+var toolHeight = 50;
+var toolWidth = 50;
+var TOOLBAR_MARGIN_Y = 0;
 
 var DEGREES_TO_RADIANS = Math.PI / 180.0;
 var RADIANS_TO_DEGREES = 180.0 / Math.PI;
@@ -913,6 +923,12 @@ function setupModelMenus() {
         isChecked: Settings.getValue(SETTING_SHOW_ZONES_IN_EDIT_MODE) === "true",
         grouping: "Advanced"
     });
+    Menu.addMenuItem({
+        menuName: "Edit",
+        menuItemName: "Google Sheets Inventory",
+        afterItem: MENU_SHOW_ZONES_IN_EDIT_MODE,
+        grouping: "Advanced"
+    });
 
     Entities.setLightsArePickable(false);
 }
@@ -941,6 +957,8 @@ function cleanupModelMenus() {
     Menu.removeMenuItem("Edit", MENU_EASE_ON_FOCUS);
     Menu.removeMenuItem("Edit", MENU_SHOW_LIGHTS_IN_EDIT_MODE);
     Menu.removeMenuItem("Edit", MENU_SHOW_ZONES_IN_EDIT_MODE);
+
+    Menu.removeMenuItem("Edit", "Google Sheets Inventory");
 }
 
 Script.scriptEnding.connect(function () {
@@ -1117,6 +1135,8 @@ function handeMenuEvent(menuItem) {
         lightOverlayManager.setVisible(isActive && Menu.isOptionChecked(MENU_SHOW_LIGHTS_IN_EDIT_MODE));
     } else if (menuItem === MENU_SHOW_ZONES_IN_EDIT_MODE) {
         Entities.setDrawZoneBoundaries(isActive && Menu.isOptionChecked(MENU_SHOW_ZONES_IN_EDIT_MODE));
+    } else if (menuItem == "Google Sheets Inventory") {
+        inventoryWindow.toggleVisible();
     }
     tooltip.show(false);
 }

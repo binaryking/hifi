@@ -35,7 +35,7 @@ Windows.ScrollingWindow {
     }
 
     // This is for JS/QML communication, which is unused in a WebWindow,
-    // but not having this here results in spurious warnings about a 
+    // but not having this here results in spurious warnings about a
     // missing signal
     signal sendToScript(var message);
 
@@ -84,6 +84,10 @@ Windows.ScrollingWindow {
             }
 
             userScripts: [ createGlobalEventBridge, raiseAndLowerKeyboard ]
+
+            onNewUrlChanged: {
+                sendToScript({type: "event", name: "newUrlChanged", value: url});
+            }
         }
     }
 }
