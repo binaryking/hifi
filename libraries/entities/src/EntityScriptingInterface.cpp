@@ -623,8 +623,13 @@ QVector<QUuid> EntityScriptingInterface::findEntitiesInFrustum(QVariantMap frust
     return result;
 }
 
-RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(const PickRay& ray, bool precisionPicking, 
+<<<<<<< 3cac93ed1f5c9cd7df2b83ba493498f3cd0f2e6f
+RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(const PickRay& ray, bool precisionPicking,
                 const QScriptValue& entityIdsToInclude, const QScriptValue& entityIdsToDiscard, bool visibleOnly, bool collidableOnly) {
+=======
+RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(const PickRay& ray, bool precisionPicking,
+                const QScriptValue& entityIdsToInclude, const QScriptValue& entityIdsToDiscard) {
+>>>>>>> Refactor C++ methods to export and import entity tree as JSON
 
     QVector<EntityItemID> entitiesToInclude = qVectorEntityItemIDFromScriptValue(entityIdsToInclude);
     QVector<EntityItemID> entitiesToDiscard = qVectorEntityItemIDFromScriptValue(entityIdsToDiscard);
@@ -633,7 +638,7 @@ RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(cons
 
 // FIXME - we should remove this API and encourage all users to use findRayIntersection() instead. We've changed
 //         findRayIntersection() to be blocking because it never makes sense for a script to get back a non-answer
-RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersectionBlocking(const PickRay& ray, bool precisionPicking, 
+RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersectionBlocking(const PickRay& ray, bool precisionPicking,
                 const QScriptValue& entityIdsToInclude, const QScriptValue& entityIdsToDiscard) {
 
     qWarning() << "Entities.findRayIntersectionBlocking() is obsolete, use Entities.findRayIntersection() instead.";
@@ -1042,17 +1047,17 @@ EntityItemPointer EntityScriptingInterface::checkForTreeEntityAndTypeMatch(const
     if (!_entityTree) {
         return EntityItemPointer();
     }
-    
+
     EntityItemPointer entity = _entityTree->findEntityByEntityItemID(entityID);
     if (!entity) {
         qDebug() << "EntityScriptingInterface::checkForTreeEntityAndTypeMatch - no entity with ID" << entityID;
         return entity;
     }
-    
+
     if (entityType != EntityTypes::Unknown && entity->getType() != entityType) {
         return EntityItemPointer();
     }
-    
+
     return entity;
 }
 
@@ -1356,6 +1361,21 @@ void EntityScriptingInterface::emitScriptEvent(const EntityItemID& entityID, con
             }
         });
     }
+
+QString EntityScriptingInterface::exportEntitiesToJSON(const EntityItemID& entityID) {
+    QString retVal;
+    QMetaObject::invokeMethod(qApp, "exportEntitiesToJSON", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(QString, retVal),
+                              Q_ARG(const EntityItemID&, entityID));
+    return retVal;
+}
+
+bool EntityScriptingInterface::importEntitiesFromJSON(const QString& json) {
+    bool retVal;
+    QMetaObject::invokeMethod(qApp, "importEntitiesFromJSON", Qt::BlockingQueuedConnection,
+                              Q_RETURN_ARG(bool, retVal),
+                              Q_ARG(const QString&, json));
+    return retVal;
 }
 
 float EntityScriptingInterface::calculateCost(float mass, float oldVelocity, float newVelocity) {

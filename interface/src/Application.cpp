@@ -3128,6 +3128,37 @@ void Application::calibrateEyeTracker5Points() {
 #endif
 
 bool Application::exportEntities(const QString& filename, const QVector<EntityItemID>& entityIDs, const glm::vec3* givenOffset) {
+    QString jsonData = exportEntitiesToJSON(entityIDs, givenOffset);
+    if (jsonData == nullptr) {
+        return false;
+    }
+
+    bool success = getEntities()->getTree()->writeToJSONFile(filename.toLocal8Bit().constData(), jsonData.toUtf8());
+
+    // restore the main window's active state
+    _window->activateWindow();
+
+    return success;
+}
+
+bool Application::exportEntities(const QString& filename, float x, float y, float z, float scale) {
+    glm::vec3 center(x, y, z);
+    glm::vec3 minCorner = center - vec3(scale);
+    float cubeSize = scale * 2;
+    AACube boundingCube(minCorner, cubeSize);
+    QVector<EntityItemPointer> entities;
+    QVector<EntityItemID> ids;
+    auto entityTree = getEntities()->getTree();
+    entityTree->withReadLock([&] {
+        entityTree->findEntities(boundingCube, entities);
+        foreach(EntityItemPointer entity, entities) {
+            ids << entity->getEntityItemID();
+        }
+    });
+    return exportEntities(filename, ids, &center);
+}
+
+QString Application::exportEntitiesToJSON(const QVector<EntityItemID>& entityIDs, const glm::vec3* givenOffset) {
     QHash<EntityItemID, EntityItemPointer> entities;
 
     auto entityTree = getEntities()->getTree();
@@ -3176,73 +3207,16 @@ bool Application::exportEntities(const QString& filename, const QVector<EntityIt
         }
     });
     if (success) {
-        success = exportTree->writeToJSONFile(filename.toLocal8Bit().constData());
-
-        // restore the main window's active state
-        _window->activateWindow();
-    }
-    return success;
-}
-
-bool Application::exportEntities(const QString& filename, float x, float y, float z, float scale) {
-    glm::vec3 center(x, y, z);
-    glm::vec3 minCorner = center - vec3(scale);
-    float cubeSize = scale * 2;
-    AACube boundingCube(minCorner, cubeSize);
-    QVector<EntityItemPointer> entities;
-    QVector<EntityItemID> ids;
-    auto entityTree = getEntities()->getTree();
-    entityTree->withReadLock([&] {
-        entityTree->findEntities(boundingCube, entities);
-        foreach(EntityItemPointer entity, entities) {
-            ids << entity->getEntityItemID();
+        QByteArray json = exportTree->exportAsJSON();
+        if (json != nullptr) {
+            return QString::fromUtf8(json);
         }
-    });
-    return exportEntities(filename, ids, &center);
-}
-
-QString Application::exportEntityJSON(const EntityItemID &entityID) {
-    auto entityTree = getEntities()->getTree();
-    auto exportTree = std::make_shared<EntityTree>();
-    exportTree->createRootElement();
-    glm::vec3 root(TREE_SCALE, TREE_SCALE, TREE_SCALE);
-    bool success = true;
-    entityTree->withReadLock([&] {
-        auto entityItem = entityTree->findEntityByEntityItemID(entityID);
-        if (!entityItem) {
-            qCWarning(interfaceapp) << "Skipping export of" << entityID << "that is not in scene.";
-            success = false;
-            return;
-        }
-
-        EntityItemID parentID = entityItem->getParentID();
-        if (parentID.isInvalidID() || !entityTree->findEntityByEntityItemID(parentID)) {
-            auto position = entityItem->getPosition(); // If parent wasn't selected, we want absolute position, which isn't in properties.
-            root.x = glm::min(root.x, position.x);
-            root.y = glm::min(root.y, position.y);
-            root.z = glm::min(root.z, position.z);
-        }
-
-        if (entityItem == NULL) {
-            success = false;
-            return;
-        }
-
-        auto properties = entityItem->getProperties();
-        parentID = properties.getParentID();
-        if (parentID.isInvalidID()) {
-            properties.setPosition(properties.getPosition() - root);
-        }
-        exportTree->addEntity(entityItem->getEntityItemID(), properties);
-    });
-    if (success) {
-        return QString::fromUtf8(exportTree->exportAsJSON());
     }
 
-    return NULL;
+    return nullptr;
 }
 
-bool Application::addEntityFromJSON(const QString& json) {
+bool Application::importEntitiesFromJSON(const QString& json) {
     QByteArray data = json.toUtf8();
     QDataStream stream(data);
     return getEntities()->getTree()->readJSONFromStream(data.size(), stream);

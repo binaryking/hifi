@@ -24,13 +24,7 @@ signals:
 public slots:
     glm::vec3 getContentsDimensions(); /// returns the overall dimensions of everything on the blipboard
     float getClipboardContentsLargestDimension(); /// returns the largest dimension of everything on the clipboard
-    bool importEntities(const QString& filename);
-    bool exportEntities(const QString& filename, const QVector<EntityItemID>& entityIDs);
-    bool exportEntities(const QString& filename, float x, float y, float z, float s);
-    bool addEntityFromJSON(const QString& json);
-    QString exportEntityJSON(const EntityItemID& entityID);
-    QString getEntityJSONHash(const QString& json);
-    QVector<EntityItemID> pasteEntities(glm::vec3 position);
+    QString hash(const QString& json);
 };
 
 #endif // hifi_ClipboardScriptingInterface_h

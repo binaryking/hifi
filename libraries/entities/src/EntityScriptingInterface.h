@@ -218,6 +218,8 @@ public slots:
 
     Q_INVOKABLE void emitScriptEvent(const EntityItemID& entityID, const QVariant& message);
 
+    Q_INVOKABLE QString exportEntitiesToJSON(const EntityItemID& entityID);
+    Q_INVOKABLE bool importEntitiesFromJSON(const QString& json);
 signals:
     void collisionWithEntity(const EntityItemID& idA, const EntityItemID& idB, const Collision& collision);
 

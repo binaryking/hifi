@@ -37,7 +37,7 @@ InventoryWindow = function() {
 
     that.toggleVisible = function() {
         that.setVisible(!visible);
-    }
+    };
 
     webView.webEventReceived.connect(function(data) {
         data = JSON.parse(data);
@@ -64,11 +64,11 @@ InventoryWindow = function() {
 
     String.prototype.startsWith = function(str) {
         return (this.indexOf(str) === 0);
-    }
+    };
 
     String.prototype.contains = function(s, i) {
         return this.indexOf(s, i) != -1;
-    }
+    };
 
     function auth() {
         var authUrl = "https://accounts.google.com/o/oauth2/v2/auth?response_type=token";
@@ -180,9 +180,9 @@ InventoryWindow = function() {
             newEntry.push(properties.modelUrl);
             newEntry.push(properties.created);
             newEntry.push(1);
-            var entityJSON = Clipboard.exportEntityJSON(selectionManager.selections[i]);
+            var entityJSON = Entities.exportEntitiesToJSON(selectionManager.selections[i]);
             newEntry.push(entityJSON);
-            newEntry.push(Clipboard.getEntityJSONHash(entityJSON));
+            newEntry.push(Clipboard.hash(entityJSON));
             entities.push(newEntry);
         }
 
@@ -216,8 +216,8 @@ InventoryWindow = function() {
     function rezEntity() {
         var json = gspreadsheetEntriesJSON[selectedEntityIndex][0];
         var checksum = gspreadsheetEntriesJSON[selectedEntityIndex][1];
-        if (Clipboard.getEntityJSONHash(json) == checksum) {
-            var success = Clipboard.addEntityFromJSON(json);
+        if (Clipboard.hash(json) == checksum) {
+            var success = Entities.importEntitiesFromJSON(json);
             if (!success) {
                 Window.alert("There was an error adding the requested entity.");
             }
@@ -227,4 +227,4 @@ InventoryWindow = function() {
     }
 
     return that;
-}
+};

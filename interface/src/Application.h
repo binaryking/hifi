@@ -285,8 +285,8 @@ public slots:
     QVector<EntityItemID> pasteEntities(float x, float y, float z);
     bool exportEntities(const QString& filename, const QVector<EntityItemID>& entityIDs, const glm::vec3* givenOffset = nullptr);
     bool exportEntities(const QString& filename, float x, float y, float z, float scale);
-    QString exportEntityJSON(const EntityItemID& entityID);
-    bool addEntityFromJSON(const QString& json);
+    QString exportEntitiesToJSON(const QVector<EntityItemID> &entityIDs, const glm::vec3* givenOffset = nullptr);
+    bool importEntitiesFromJSON(const QString& json);
     bool importEntities(const QString& url);
     void updateThreadPoolCount() const;
 

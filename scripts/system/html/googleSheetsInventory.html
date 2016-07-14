@@ -79,8 +79,8 @@
                     name: document.querySelector('#entity-name .sort-order'),
                     path: document.querySelector('#entity-path .sort-order'),
                     date: document.querySelector('#entity-date .sort-order'),
-                    count: document.querySelector('#entity-count .sort-order'),
-                }
+                    count: document.querySelector('#entity-count .sort-order')
+                };
                 function setSortColumn(column) {
                     if (currentSortColumn == column) {
                         currentSortOrder = currentSortOrder == "asc" ? "desc" : "asc";
@@ -128,7 +128,7 @@
                         ths[2].width = 0.24 * tableWidth;
                         ths[3].width = 0.08 * tableWidth;
                     }
-                };
+                }
 
                 if (window.EventBridge !== undefined) {
                     EventBridge.scriptEventReceived.connect(function(data) {

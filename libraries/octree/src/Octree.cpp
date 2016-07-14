@@ -1877,10 +1877,12 @@ bool Octree::writeToFile(const char* fileName, OctreeElementPointer element, QSt
     bool success = false;
     if (persistAsFileType == "svo") {
         success = writeToSVOFile(fileName, element);
-    } else if (persistAsFileType == "json") {
-        success = writeToJSONFile(cFileName, element);
-    } else if (persistAsFileType == "json.gz") {
-        success = writeToJSONFile(cFileName, element, true);
+    } else if (persistAsFileType == "json" || persistAsFileType == "json.gz") {
+        bool doGzip = false;
+        if (persistAsFileType == "json.gz") {
+            doGzip = true;
+        }
+        success = writeToJSONFile(cFileName, exportAsJSON(element), doGzip);
     } else {
         qCDebug(octree) << "unable to write octree to file of type" << persistAsFileType;
     }
@@ -1906,14 +1908,17 @@ QByteArray Octree::exportAsJSON(OctreeElementPointer element) {
     bool entityDescriptionSuccess = writeToMap(entityDescription, top, true, true);
     if (!entityDescriptionSuccess) {
         qCritical("Failed to convert Entities to QVariantMap while saving to json.");
-        return NULL;
+        return nullptr;
     }
 
-    return QJsonDocument::fromVariant(entityDescription).toJson(QJsonDocument::Compact);
+    return QJsonDocument::fromVariant(entityDescription).toJson();
 }
 
-bool Octree::writeToJSONFile(const char* fileName, OctreeElementPointer element, bool doGzip) {
-    QByteArray jsonData = exportAsJSON(element);
+bool Octree::writeToJSONFile(const char* fileName, QByteArray jsonData, bool doGzip) {
+    if (jsonData == nullptr) {
+        qCritical("Error exporting entity data to JSON");
+        return false;
+    }
     QByteArray jsonDataForFile;
 
     if (doGzip) {
