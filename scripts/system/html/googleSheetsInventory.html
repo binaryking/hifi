@@ -36,6 +36,9 @@
                 elStoreEntity = document.getElementById("store-entity");
                 elRezEntity = document.getElementById("rez-entity");             
                 elNoEntitiesMessage = document.getElementById("no-entities");
+                elGoogleSheetInfo = document.getElementById("google-sheet-info");
+                elGoogleSheetInfo.style.visibility = "hidden";
+                elSaveGSheetUrl = document.getElementById("save-gsheet-url");
 
                 document.getElementById("entity-name").onclick = function() {
                     setSortColumn('name');
@@ -65,6 +68,10 @@
 
                 elRezEntity.onclick = function() {
                     EventBridge.emitWebEvent(JSON.stringify({ type: "rezentity" }));
+                };
+
+                elSaveGSheetUrl.onclick = function () {
+                    EventBridge.emitWebEvent(JSON.stringify({ type: "savegsheeturl", url: $("#filter").val() }));
                 };
 
                 function auth() {
@@ -111,7 +118,7 @@
 
                 function resize() {
                     // Take up available window space
-                    elEntityTableScroll.style.height = window.innerHeight - 190;
+                    elEntityTableScroll.style.height = window.innerHeight - 220;
 
                     var tds = document.querySelectorAll("#entity-table-body tr:first-child td");
                     var ths = document.querySelectorAll("#entity-table thead th");
@@ -128,6 +135,9 @@
                         ths[2].width = 0.24 * tableWidth;
                         ths[3].width = 0.08 * tableWidth;
                     }
+
+                    var googleSpreadsheetUrlInputWidth = $("body").width() - 200;
+                    $("#filter").width(googleSpreadsheetUrlInputWidth);
                 }
 
                 if (window.EventBridge !== undefined) {
@@ -137,10 +147,12 @@
                         if (data.type == "authenticated") {
                             elLogin.className = "red";
                             elLogin.value = "Logout";
+                            elGoogleSheetInfo.style.visibility = "visible";
                             elEntityTableScroll.style.visibility = "visible";
                         } else if (data.type == "deauthenticated") {
                             elLogin.className = "blue";
                             elLogin.value = "Login to Google";
+                            elGoogleSheetInfo.style.visibility = "hidden";
                             elEntityTableScroll.style.visibility = "hidden";
                             entityList.clear();
                         } else if (data.type == "tableupdate") {
@@ -155,12 +167,16 @@
                                 }
                                 resize();
                             }
+                        } else if (data.type == "gsheetUrlUpdate") {
+                            $("#filter").val(data.url);
                         }
                     });
                 }
 
                 window.onresize = resize;
                 resize();
+
+                EventBridge.emitWebEvent(JSON.stringify({ type: "updategsheeturl" }));
             });
 
             augmentSpinButtons();
@@ -175,15 +191,19 @@
         <div id="search-area">
             <input type="button" class="blue" id="login" value="Login to Google"/>
         </div>
+        <div id="google-sheet-info">
+            <input type="text" class="search" id="filter" placeholder="Google Spreadsheet URL"/>
+            <input type="button" id="save-gsheet-url" value="Save and fetch" style="position: fixed; right: 20px"/>
+        </div>
         <div id="entity-table-scroll">
-            <table id="entity-table">
+            <table id="entity-table" style="margin-top: -5px !important; margin-bottom: 0 !important;">
                 <colgroup>
                     <col span="1" id="col-name" />
                     <col span="1" id="col-path" />
                     <col span="1" id="col-date" />
                     <col span="1" id="col-count" />
                 </colgroup>
-                <thead>
+                <thead style="top: 100px !important;">
                     <tr>
                         <th id="entity-name" data-sort="name">Name<span class="sort-order"></span></th>
                         <th id="entity-path" data-sort="path">Path<span class="sort-order"></span></th>

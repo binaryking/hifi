@@ -3,7 +3,7 @@ var GOOGLE_API_CLIENT_ID = "172641056593-nemn2u9qbfe0ttvn92k1nd9eafiae3te.apps.g
 var GOOGLE_API_REDIRECT_URI = "http://localhost:8415";
 var GOOGLE_API_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
 var GOOGLE_API_PROMPT = "none";
-var GOOGLE_SPREADSHEET_ID_SETTING_KEY = "g_spreadsheet_id";
+var GOOGLE_SPREADSHEET_URL_SETTING_KEY = "g_spreadsheet_url";
 var GOOGLE_SHEETS_ENDPOINT = "https://sheets.googleapis.com/v4/spreadsheets";
 
 InventoryWindow = function() {
@@ -23,7 +23,7 @@ InventoryWindow = function() {
 
     var accessToken = null;
 
-    var gspreadsheetId = Settings.getValue(GOOGLE_SPREADSHEET_ID_SETTING_KEY);
+    var gspreadsheetId = null;
 
     var gspreadsheetEntryCount = null;
     var gspreadsheetEntriesJSON = [];
@@ -59,8 +59,24 @@ InventoryWindow = function() {
             } else {
                 rezEntity();
             }
+        } else if (data.type == "savegsheeturl") {
+            if (data.url == "") {
+                Window.alert("Please enter a valid URL of a Google Spreadsheet");
+            } else {
+                saveGSheetUrl(data.url);
+            }
+        } else if (data.type == "updategsheeturl") {
+            var gsheetUrl = Settings.getValue(GOOGLE_SPREADSHEET_URL_SETTING_KEY);
+            webView.emitScriptEvent(JSON.stringify({type: "gsheetUrlUpdate", url: gsheetUrl}));
+            setGSheetIdFromUrl(gsheetUrl);
         }
     });
+
+    function setGSheetIdFromUrl(url) {
+        if (url != "") {
+            gspreadsheetId = url.split("/")[5];
+        }
+    }
 
     String.prototype.startsWith = function(str) {
         return (this.indexOf(str) === 0);
@@ -93,34 +109,14 @@ InventoryWindow = function() {
                         gauthWindow.close();
                         if (message.value.contains("access_token")) {
                             accessToken = message.value.split("#")[1].split("=")[1].split("&")[0];
-                            if (gspreadsheetId == "") {
-                                // create new Google Spreadsheet
-                                print("Creating new Google spreadsheet ...");
-                                var url = GOOGLE_SHEETS_ENDPOINT; 
-                                url += "?access_token=" + accessToken;
-
-                                var request = new XMLHttpRequest();
-                                request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
-                                request.open("POST", url, true);
-                                request.onreadystatechange = function() {
-                                    if (request.readyState === request.DONE) {
-                                        if (request.status == 200) {
-                                            var response = JSON.parse(request.responseText);
-                                            Settings.setValue(GOOGLE_SPREADSHEET_ID_SETTING_KEY, response.spreadsheetId);
-                                            gspreadsheetId = response.spreadsheetId;
-                                        }
-                                    }
-                                };
-                                request.send(JSON.stringify({
-                                    properties: { title: "Hifi Entity Inventory" }
-                                }));
-                            }
 
                             var data = {
                                 type: "authenticated"
                             };
                             webView.emitScriptEvent(JSON.stringify(data));
-                            fetchSheetEntries();
+                            if (gspreadsheetId != null) {
+                                fetchSheetEntries();
+                            }
                         } else {
                             accessToken = null;
                             Window.alert("There was an error authenticating with Google");
@@ -224,6 +220,12 @@ InventoryWindow = function() {
         } else {
             Window.alert("The requested entity JSON does not match the checksum.");
         }
+    }
+
+    function saveGSheetUrl(url) {
+        Settings.setValue(GOOGLE_SPREADSHEET_URL_SETTING_KEY, url);
+        setGSheetIdFromUrl(url);
+        fetchSheetEntries();
     }
 
     return that;
