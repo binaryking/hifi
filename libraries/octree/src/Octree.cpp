@@ -1878,10 +1878,7 @@ bool Octree::writeToFile(const char* fileName, OctreeElementPointer element, QSt
     if (persistAsFileType == "svo") {
         success = writeToSVOFile(fileName, element);
     } else if (persistAsFileType == "json" || persistAsFileType == "json.gz") {
-        bool doGzip = false;
-        if (persistAsFileType == "json.gz") {
-            doGzip = true;
-        }
+        bool doGzip = persistAsFileType == "json.gz";
         success = writeToJSONFile(cFileName, exportAsJSON(element), doGzip);
     } else {
         qCDebug(octree) << "unable to write octree to file of type" << persistAsFileType;

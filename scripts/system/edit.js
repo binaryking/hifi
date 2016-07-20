@@ -1104,7 +1104,7 @@ function handeMenuEvent(menuItem) {
         } else {
             var filename = Window.save("Select Where to Save", "", "*.json");
             if (filename) {
-                var success = Entities.exportEntities(filename, selectionManager.selections);
+                var success = Clipboard.exportEntities(filename, selectionManager.selections);
                 if (!success) {
                     Window.notifyEditError("Export failed.");
                 }
@@ -1187,7 +1187,7 @@ function importSVO(importURL) {
         visible: true
     });
 
-    var success = Entities.importEntities(importURL);
+    var success = Clipboard.importEntities(importURL);
 
     if (success) {
         var VERY_LARGE = 10000;
@@ -1201,7 +1201,7 @@ function importSVO(importURL) {
         }
 
         if (position != null) {
-            var pastedEntityIDs = Entities.pasteEntities(position);
+            var pastedEntityIDs = Clipboard.pasteEntities(position);
 
             if (isActive) {
                 selectionManager.setSelections(pastedEntityIDs);
