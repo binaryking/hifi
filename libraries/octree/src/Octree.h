@@ -300,7 +300,7 @@ public:
 
     // Octree exporters
     bool writeToFile(const char* filename, OctreeElementPointer element = NULL, QString persistAsFileType = "svo");
-    QByteArray exportAsJSON(OctreeElementPointer element = NULL);
+    QByteArray exportAsJSON(OctreeElementPointer element = nullptr);
     bool writeToJSONFile(const char* filename, QByteArray jsonData, bool doGzip = false);
     bool writeToSVOFile(const char* filename, OctreeElementPointer element = NULL);
     virtual bool writeToMap(QVariantMap& entityDescription, OctreeElementPointer element, bool skipDefaultValues,
