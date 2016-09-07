@@ -1361,6 +1361,7 @@ void EntityScriptingInterface::emitScriptEvent(const EntityItemID& entityID, con
             }
         });
     }
+}
 
 QString EntityScriptingInterface::exportEntitiesToJSON(const EntityItemID& entityID) {
     QString retVal;

@@ -2,7 +2,7 @@ var GOOGLE_SHEETS_INVENTORY_HTML_URL = Script.resolvePath("../html/googleSheetsI
 var GOOGLE_API_CLIENT_ID = "172641056593-nemn2u9qbfe0ttvn92k1nd9eafiae3te.apps.googleusercontent.com";
 var GOOGLE_API_REDIRECT_URI = "http://localhost:8415";
 var GOOGLE_API_SCOPE = "https://www.googleapis.com/auth/spreadsheets";
-var GOOGLE_API_PROMPT = "none";
+var GOOGLE_API_PROMPT = "";
 var GOOGLE_SPREADSHEET_URL_SETTING_KEY = "g_spreadsheet_url";
 var GOOGLE_SHEETS_ENDPOINT = "https://sheets.googleapis.com/v4/spreadsheets";
 
@@ -12,7 +12,9 @@ InventoryWindow = function() {
     var webView = new OverlayWebWindow({
         title: "Google Sheets Inventory",
         source: GOOGLE_SHEETS_INVENTORY_HTML_URL,
-        toolWindow: true
+        toolWindow: false,
+        width: 500,
+        height: 500
     });
 
     var visible = false;
