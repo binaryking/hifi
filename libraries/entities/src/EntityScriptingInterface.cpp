@@ -623,13 +623,8 @@ QVector<QUuid> EntityScriptingInterface::findEntitiesInFrustum(QVariantMap frust
     return result;
 }
 
-<<<<<<< 3cac93ed1f5c9cd7df2b83ba493498f3cd0f2e6f
 RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(const PickRay& ray, bool precisionPicking,
                 const QScriptValue& entityIdsToInclude, const QScriptValue& entityIdsToDiscard, bool visibleOnly, bool collidableOnly) {
-=======
-RayToEntityIntersectionResult EntityScriptingInterface::findRayIntersection(const PickRay& ray, bool precisionPicking,
-                const QScriptValue& entityIdsToInclude, const QScriptValue& entityIdsToDiscard) {
->>>>>>> Refactor C++ methods to export and import entity tree as JSON
 
     QVector<EntityItemID> entitiesToInclude = qVectorEntityItemIDFromScriptValue(entityIdsToInclude);
     QVector<EntityItemID> entitiesToDiscard = qVectorEntityItemIDFromScriptValue(entityIdsToDiscard);
@@ -1365,9 +1360,11 @@ void EntityScriptingInterface::emitScriptEvent(const EntityItemID& entityID, con
 
 QString EntityScriptingInterface::exportEntitiesToJSON(const EntityItemID& entityID) {
     QString retVal;
+    QVector<EntityItemID> vector;
+    vector.append(entityID);
     QMetaObject::invokeMethod(qApp, "exportEntitiesToJSON", Qt::BlockingQueuedConnection,
                               Q_RETURN_ARG(QString, retVal),
-                              Q_ARG(const EntityItemID&, entityID));
+                              Q_ARG(const QVector<EntityItemID>&, vector));
     return retVal;
 }
 

@@ -13,15 +13,11 @@ InventoryWindow = function() {
         title: "Google Sheets Inventory",
         source: GOOGLE_SHEETS_INVENTORY_HTML_URL,
         toolWindow: false,
-        width: 500,
-        height: 500
+        width: 700,
+        height: 400
     });
 
-    var visible = false;
-
-    webView.setVisible(visible);
-
-    that.webView = webView;
+    webView.setVisible(false);
 
     var accessToken = null;
 
@@ -32,13 +28,8 @@ InventoryWindow = function() {
 
     var selectedEntityIndex = null;
 
-    that.setVisible = function(newVisible) {
-        visible = newVisible;
-        webView.setVisible(visible);
-    };
-
-    that.toggleVisible = function() {
-        that.setVisible(!visible);
+    that.show = function() {
+        webView.setVisible(true);
     };
 
     webView.webEventReceived.connect(function(data) {
@@ -175,7 +166,7 @@ InventoryWindow = function() {
             var properties = Entities.getEntityProperties(selectionManager.selections[i]);
             var newEntry = [];
             newEntry.push(properties.name);
-            newEntry.push(properties.modelUrl);
+            newEntry.push(properties.modelURL);
             newEntry.push(properties.created);
             newEntry.push(1);
             var entityJSON = Entities.exportEntitiesToJSON(selectionManager.selections[i]);

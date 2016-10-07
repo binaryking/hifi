@@ -1136,7 +1136,7 @@ function handeMenuEvent(menuItem) {
     } else if (menuItem === MENU_SHOW_ZONES_IN_EDIT_MODE) {
         Entities.setDrawZoneBoundaries(isActive && Menu.isOptionChecked(MENU_SHOW_ZONES_IN_EDIT_MODE));
     } else if (menuItem == "Google Sheets Inventory") {
-        inventoryWindow.toggleVisible();
+        inventoryWindow.show();
     }
     tooltip.show(false);
 }
